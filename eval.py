@@ -1,26 +1,26 @@
 import torch
-from utils import load_checkpoint
-
-import config
-from  pytorch_msssim import MS_SSIM
-
+from torchvision import transforms
 import sys
 #chooses what model to train
 from resUnet import Generator
-
-
-from time import localtime
-import os
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 from PIL import Image
-import config
 from torchvision.utils import save_image
-import os
 
+def load_checkpoint(checkpoint_file, model):
+    print("=> Loading checkpoint")
+    checkpoint = torch.load(checkpoint_file, map_location=DEVICE)
+    model.load_state_dict(checkpoint["state_dict"])
+
+transform = transforms.Compose([
+        transforms.Resize((256, 256)),
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
 def main():
-    gen = Generator(init_weight=config.INIT_WEIGHTS).to(config.DEVICE)
+    gen = Generator(init_weight=False).to(DEVICE)
     x = Image.open(sys.argv[1])
-    x = config.transform(x).unsqueeze_(0).to(config.DEVICE)
+    x = transform(x).unsqueeze_(0).to(DEVICE)
     print(x.shape)
     print(sys.argv[2])
     load_checkpoint(sys.argv[2], gen)
